@@ -1,0 +1,161 @@
+#pragma once
+#include<iostream>
+using namespace std;
+class Node {
+public:
+	int data;
+	Node *next;
+};
+class List {
+private:
+	Node *head;
+	
+public:int length;
+	List();
+	~List();
+	void Insert(int x);//将x尾插入L
+	void Delete(int *x);//将尾元素删除，由x带回
+	List& operator=(const List &L);
+	List(const List&L);
+	void Print();
+};
+List::List() {
+	head = new Node;
+	length = 0;
+	head->next = NULL;
+}
+List::~List(){
+	Node * p;
+	p = head;
+	for (int i = 0; i < length; i++) {
+		Node *temp = p;
+		p = p->next;
+		free(temp);
+		length--;
+	}
+	cout << "已销毁" << endl;
+}
+void List::Insert(int x) {
+	Node *p,*t;//t用来移动到末尾
+	p = new Node;
+	p->data = x;
+	p->next = NULL;
+	t = head;
+	while (t->next != NULL)
+		t = t->next;
+	t->next = p;
+	p->next = NULL;
+	length--;
+}
+void List::Delete(int *x) {
+	Node *p, *t;//t在p前
+	p = head->next;
+	t = head;
+	if (length == 0)
+		printf("没有元素");
+	else
+		while (p->next != NULL) {
+			p = p->next;
+			t = t->next;
+		}
+	*x = p->data;
+	delete(p);
+	t->next = NULL;
+}
+List& List:: operator=(const List &L) {
+	if (this == &L)
+		return *this;
+	Node *p, *t;//p指向当前，t指向L
+	p = this->head = new Node;
+	t = L.head;
+	while (t->next != NULL) {
+		p = p->next = new Node;
+		t = t->next;
+		p->data = t->data;
+		length++;
+	}
+	p->next = NULL;//这个也少写了...
+	return *this;
+}
+	
+
+List::List(const List&L) {
+	Node *p,*t,*h;
+	t = L.head;
+	h = head = new Node;
+	length = 0;
+	head->next = NULL;
+	while (t->next != NULL) {
+		t = t->next;
+		p = new Node;
+		p->data = t->data;
+		h->next = p;
+		h = h->next;
+		length++;
+	}
+	h->next = NULL;//※注意注意注意！！！！每次都少写
+}
+
+void List::Print() {
+	Node *p;
+	p = head;
+	while (p->next != NULL) {
+		p = p->next;
+		cout << p->data << endl;
+	}
+}
+#include "pch.h"
+#include <iostream>
+#include"ListAndNode.h"
+#include"time.h"
+using namespace std;
+#define pi 3.14
+clock_t start, stop;
+int lcm(int a, int b) {
+	int c = a * b;
+	for (int i = a > b ? b : a; i <= c; i++) {
+		if (i%a == 0 && i%b == 0)
+			return i;
+	}
+	return 1;
+}
+inline int lcm_inline(int a, int b) {
+	int c = a * b;
+	for (int i = a > b ? b : a; i <= c; i++) {
+		if (i%a == 0 && i%b == 0)
+			return i;
+	}
+	return 1;
+}
+void main() {
+	/*int a = 242424334, b = 243234634343;
+	start = clock();
+	lcm(a,b);
+	stop = clock();
+	cout << "普通函数速度：" << (double)(stop - start) / CLOCKS_PER_SEC << endl;
+	start = clock();
+	lcm_inline(a,b);
+	stop = clock();
+	cout << "内联函数速度：" << (double)(stop - start) / CLOCKS_PER_SEC << endl;
+}*/
+/*#ifdef pi
+	cout << "定义了pi：" << pi << endl;
+#endif // pi
+}*/
+	List L;
+	int x;
+	L.Insert(2);
+	L.Insert(3);
+	L.Insert(3);
+	L.Print();
+	L.Delete(&x);
+	cout << "删除了： " << x << endl;
+	List N;
+	N = L;
+	N.Print();
+	N.Delete(&x);
+	cout << endl;
+	N.Print();
+	cout << endl;
+	L.Print();
+}
