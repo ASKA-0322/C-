@@ -1,0 +1,405 @@
+#include<cstdio>
+#include<cstdarg>
+#include<cstdlib>
+#include <string>
+#include"pch.h"
+#include<iostream>
+#include<math.h>
+#include"print.h"
+/*
+#define _INTSIZEOF(n)   ( (sizeof(n) + sizeof(int) - 1) & ~(sizeof(int) - 1) )//sizeof（int）=4，则sizeof（n）1-4返回4，5-8返回8
+
+#define va_start(ap,v)  ( ap = (va_list)&v + _INTSIZEOF(v) )
+#define va_arg(ap,t)    ( *(t *)((ap += _INTSIZEOF(t)) - _INTSIZEOF(t)) )
+#define va_end(ap)      ( ap = (va_list)0 )
+*/
+
+void my_printf_int(int,int *,int *);//int*LorR
+void my_printf_double(double,int *,int *);
+void my_printf_unsigned(unsigned,int *,int *);
+void my_printf_pointer(void *,int *,int *);
+void my_printf_e(double,int *,int *);
+void my_printf_charnum(const char *,int *,int *,int *);
+void my_printf_x(int,int *,int *);
+void my_printf_o(int,int *,int *);
+void my_printf_point(const char *str,int *j,double f);
+void putwidth(int);
+int myprintf(const char *str, ...);
+
+void main() {
+	const char *s = "hello";
+	print("%13e  %.2f\n", 543.787,12.345);
+	myprintf("%13e", 543.787);
+	myprintf("%.2f", 12.345);
+}
+
+void my_printf_int(int n,int *width,int *LorR) {
+	char s[100];
+	int temp;
+	int self = 0;
+	temp = n;
+	while (temp != 0) {
+		temp /= 10;
+		self++;
+	}
+	if (*LorR == 0) {
+		if (n < 0) {
+			putchar('-');
+			n = -n;
+		}
+		for (int i = self; i > 0; i--) {
+			putchar(n / pow(10,i-1)+'0');
+			n = n % int(pow(10, i - 1));
+		}
+		putwidth(*width - self);
+	}
+	else {
+		putwidth(*width - self);
+		if (n < 0) {
+			putchar('-');
+			n = -n;
+		}
+		for (int i = self; i > 0; i--) {
+			putchar(n / pow(10, i-1) +'0');
+			n = n % int(pow(10, i - 1));
+		}
+	}
+	*width = 0;
+	*LorR = 1;
+}
+
+void my_printf_double(double n,int *width,int *LorR) {
+	int front = (int)n;
+	int behind = (int)(10000000 * (n - front));
+	if (behind % 10 > 5)
+	{
+		behind = behind / 10 + 1;
+	}
+	else
+	{
+		behind = behind / 10;
+	}
+	my_printf_int(front,width,LorR);
+	putchar('.');
+	*width = 0;
+	*LorR = 0;
+	my_printf_int(behind,width,LorR);
+	*LorR = 1;
+	*width = 0;
+}
+void my_printf_unsigned(unsigned n,int *width,int *LorR) {
+	my_printf_int(n,width,LorR);
+	*width = 0;
+	*LorR = 1;
+}
+void my_printf_pointer(void *n,int *width,int *LorR) {
+	my_printf_int(int(n),width,LorR);
+	*width = 0;
+	*LorR = 1;
+}
+void my_printf_e(double n,int *width,int *LorR) {
+	int front = int(n);
+	double behind = n - front;
+	int t1 = front;//判断有几位整数
+	double t2 , t3=1;     //判断有几位小数
+	int i = 0, j = 0;//i为front的数字个数，j为behind的数字个数
+	char e_array[20];
+	//有整数部分时：
+	//判断front的个数
+	while (t1 != 0) {
+		t1 = t1 / 10;
+		i++;
+	}
+	//判断behind的个数
+	t2 = behind;
+	while (t3 != 0){
+		t2 *= 10;
+		t3 = ((double)((int)((t2 - int(t2))*1000000)))/1000000;
+		j++;
+	}
+	//把整数部分加进数组
+	if (i == 1) {
+		e_array[0] = front + '0';
+		e_array[1] = '.';
+	}
+
+	else {
+		e_array[0] = (front / pow(10, i - 1)) + '0';
+		e_array[1] = '.';
+		for (int k = 2; k < i; k++) {
+			int m = i - k;
+			e_array[k] = (int)(front / pow(10, m)) % 10 + '0';
+		}
+		e_array[i] = front % 10 +'0';
+	}
+
+	//把小数部分加进数组
+	for (int k = i + 1; k <= i + j; k++) {		
+		e_array[k] = int(behind * 10)+'0';
+		behind = behind * 10 - int(behind * 10);
+	}
+	e_array[i + j + 1] = 'e';
+	e_array[i + j + 2] = '+';
+	e_array[i + j + 3] = '0';
+	e_array[i + j + 4] = (i-1) / 10 + '0';
+	e_array[i + j + 5] = (i-1) % 10  +'0';
+	/*for (int k = 0; k <= i + j + 5; k++)
+		putchar(e_array[k]);*/
+	if (*LorR == 0) {
+		for (int k = 0; k <= i + j + 5; k++)
+			putchar(e_array[k]);
+		putwidth(*width - i - j - 6);
+	}
+	else {
+		putwidth(*width - i - j - 6);
+		for (int k = 0; k <= i + j + 5; k++)
+			putchar(e_array[k]);
+	}
+	*width = 0;
+	*LorR = 1;
+}
+
+void my_printf_charnum(const char *s,int *j,int *width,int *LorR) {
+	char * a;
+	a = (char *)s;
+	int i=0;
+	while(a[i]!='\0'){
+		if (a[i] == '-') {
+			*LorR = 0;  //左对齐为0
+			(*j)++;
+		}
+		else if ('0' <= a[i] && a[i]<= '9') {
+			*width = *width * 10 + (int)(a[i]-48);
+			(*j)++;
+		}
+		else
+			break;
+		i++;
+	}
+}
+
+void my_printf_x(int n,int *width,int *LorR) {
+	int a;//保存余数
+	char s[100];
+	int j=0;
+	while (n!= 0) {
+		a = n % 16;
+		n /= 16;
+		if (a >= 0 && a <= 9)
+			s[j] = a + '0';
+		else if (a > 9 && a < 16)
+			s[j] = a + 55;
+		j++;
+	}
+	if (*LorR == 0) {
+		for (int i = j - 1; i >= 0; i--)
+			putchar(s[i]);
+		putwidth(*width - j);
+	}
+	else {
+		putwidth(*width - j);
+		for (int i = j - 1; i >= 0; i--)
+			putchar(s[i]);
+	}
+	*width = 0;
+	*LorR = 1;
+}
+void my_printf_o(int n,int *width,int *LorR) {
+	int a;//保存余数
+	char s[100];
+	int j = 0;
+	while (n != 0) {
+		a = n % 8;
+		n /= 8;
+		s[j] = a + '0';
+		j++;
+	}
+	if (*LorR == 0) {
+		for (int i = j - 1; i >= 0; i--)
+			putchar(s[i]);
+		putwidth(*width - j);
+	}
+	else {
+		putwidth(*width - j);
+		for (int i = j - 1; i >= 0; i--)
+			putchar(s[i]);
+	}
+	*width = 0;
+	*LorR = 1;
+}
+void my_printf_point(const char *str, int *j, double f) {//.2f
+	int width = 0;
+	int LorR = 1;
+	double f2;
+	str++;
+	my_printf_charnum(str, j, &width, &LorR);
+	if (*(str+*j) == 'f') {
+		f = int(f * 100);
+		f2 = f/100;
+		my_printf_double(f2, &width, &LorR);
+	}
+	else
+		return;
+}
+
+void putwidth(int width) {
+	for (int i = 0; i < width; i++)
+		putchar(' ');
+}
+int myprintf(const char *str, ...) {/*%d 十进制有符号整数     ok
+								%u 十进制无符号整数           ok
+								%f 浮点数					  ok
+								%s 字符串					  ok
+								%c 单个字符					  ok
+								%p 指针的值,p =&a,输出a的地址 ok
+								%e 指数形式的浮点数           ?负数形式
+								%x, %X 无符号以十六进制表示的整数 ok
+								%o 无符号以八进制表示的整数       ok
+																	*/
+	const char *s;
+	char *c;
+	int d;
+	char a[20];
+	double f;
+	double dou;
+	unsigned u;
+	void  *point;
+	double e;
+	int x;
+	int o;
+	int self=0;//自己有多少位
+
+	//va_list ap;
+	char *p;//p作为va_list中的ap指针
+	int j=0; //对齐的数字的个数 ：1为1，11为2
+	int width = 0; //宽度初始化为0
+	int LorR = 1; //1右对齐，0左对齐
+
+	//va_start(ap, str);
+	p = (char *)&str + sizeof(str);
+	while (*str) {
+		if ((*str) != '%' && (*str)!='\\' ){
+			putchar(*str);
+			str++;
+		}
+		else if(*(str)=='%'){
+			str++;
+			my_printf_charnum(str, &j, &width, &LorR);
+			str += j;
+			switch (*str){
+			case 's': //字符串
+				//s = va_arg(ap, const char *);
+				s = (const char *)*(int *)p;
+				p += sizeof(s);
+				if (LorR == 0) {
+					for (s; *s; s++) {
+						putchar(*s);
+						self++;
+					}
+					putwidth(width-self);
+				}
+				else {
+					c = (char *)s;
+					for (c; *c; c++)
+						self++;
+					putwidth(width-self);
+					for (s; *s; s++) {
+						putchar(*s);
+					}
+				}
+				self = 0;
+				LorR = 1;
+				str++;
+				break;
+			case 'd': //整型
+				//d = va_arg(ap, int);
+				d = *(int *)p;
+				p += sizeof(d);
+				my_printf_int(d, &width,&LorR);
+				str++;
+				break;
+			case 'l':  //若后面为d输出双精度
+				if (*(str + 1) == 'f') {
+					//dou = va_arg(ap, double);
+					dou = *(double *)p;
+					p += sizeof(double);
+					my_printf_double(dou,&width,&LorR);
+					str = str + 2;
+					break;
+				}
+				else {
+					putchar('l');
+					str++;
+					break;
+				}
+			case 'f':  //浮点型
+				//f = va_arg(ap, double);
+				f = *(double*)p;
+				p += sizeof(f);
+				my_printf_double(f,&width,&LorR);
+				str++;
+				break;
+			case 'u':  //十进制无符号整数
+				u = *(unsigned *)p;
+				p += sizeof(u);
+				my_printf_unsigned(u,&width,&LorR);
+				str++;
+				break;
+			case 'p':  //指针的值,p = &a,即输出a的地址
+				point = (void *)*(int *)p;
+				p += sizeof(point);
+				my_printf_pointer(point,&width,&LorR);
+				str++;
+				break;
+			case 'e':  //指数形式的浮点数
+				e = *(double *)p;
+				p += sizeof(e);
+				my_printf_e(e,&width,&LorR);
+				str++;
+				break;
+			case 'x':  //无符号以十六进制表示的整数
+			case 'X':
+				x = *(int *)p;
+				p += sizeof(x);
+				my_printf_x(x,&width,&LorR);
+				str++;
+				break;
+			case 'o':  //无符号以八进制表示的整数
+				o = *(int *)p;
+				p += sizeof(o);
+				my_printf_o(o,&width,&LorR);
+				str++;
+				break;
+			case '.':
+				f = *(double*)p;
+				p += sizeof(f);
+				my_printf_point(str, &j, f);
+				str += j + 2;
+				break;
+			default:
+				putchar(*str);
+				str++;
+				break;
+			}
+		}
+		else if (*(str + 1) == '\\'){
+			str++;
+			switch (*str)
+			{
+			case'n':
+				putchar('\n');//换行
+			case't':
+				putchar('\t');//Tab,可以用来对齐
+			case'r':
+				putchar('\r');//回车
+			case 'f':
+				putchar('\f');//清屏并换页
+			default:
+				break;
+			}
+		}
+	}
+	p = 0;
+	//va_end(ap);
+	return 1;
+}
